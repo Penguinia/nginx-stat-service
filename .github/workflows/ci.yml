@@ -1,0 +1,78 @@
+name: CI
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.9'
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pytest flake8 mypy
+    - name: Run tests
+      run: pytest
+    - name: Lint with flake8
+      run: flake8 app tests
+    - name: Type check with mypy
+      run: mypy app tests
+
+  docker:
+    needs: test
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Build Docker image
+        run: docker build -t nginx-stat-service .
+      - name: Log in to Docker Hub
+        run: echo "${{ secrets.DOCKER_HUB_TOKEN }}" | docker login -u ${{ secrets.DOCKER_HUB_USERNAME }} --password-stdin
+      - name: Push Docker image
+        run: |
+          docker tag nginx-stat-service ${{ secrets.DOCKER_HUB_USERNAME }}/nginx-stat-service:latest
+          docker push ${{ secrets.DOCKER_HUB_USERNAME }}/nginx-stat-service:latestname: CI
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.9'
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pytest flake8 mypy
+    - name: Run tests
+      run: pytest
+    - name: Lint with flake8
+      run: flake8 app tests
+    - name: Type check with mypy
+      run: mypy app tests
+
+  docker:
+    needs: test
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Build Docker image
+        run: docker build -t nginx-stat-service .
+      - name: Log in to Docker Hub
+        run: echo "${{ secrets.DOCKER_HUB_TOKEN }}" | docker login -u ${{ secrets.DOCKER_HUB_USERNAME }} --password-stdin
+      - name: Push Docker image
+        run: |
+          docker tag nginx-stat-service ${{ secrets.DOCKER_HUB_USERNAME }}/nginx-stat-service:latest
+          docker push ${{ secrets.DOCKER_HUB_USERNAME }}/nginx-stat-service:latest
+
